@@ -171,6 +171,28 @@
     .download-panel{position:sticky;bottom:12px;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 32px rgba(20,33,61,.10);padding:12px;margin-top:14px}
     .download-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .warn{padding:11px 12px;border-radius:15px;background:#fff7e7;border:1px solid #ffe3a7;color:#8a5900;font-size:.82rem;line-height:1.35;margin-top:12px}
+
+    .wizard-open-row{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+    .wizard-open-row .helper{margin-top:0;text-align:center}
+    .wizard-modal{display:none;position:fixed;inset:0;z-index:120;background:rgba(15,23,42,.55);padding:18px;overflow:auto}
+    .wizard-modal.show{display:grid;place-items:center}
+    .wizard-card{width:min(96vw,760px);max-height:94vh;overflow:auto;background:white;border-radius:26px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(15,23,42,.36);padding:16px}
+    .wizard-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .wizard-head h2{font-size:1.08rem;margin:0 0 4px}
+    .wizard-head p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.35}
+    .wizard-preview{background:#f1f7ff;border:1px solid #dbeafe;border-radius:20px;display:grid;place-items:center;min-height:260px;overflow:hidden;margin-bottom:12px}
+    .wizard-preview img{display:block;max-width:100%;max-height:50vh;object-fit:contain;background:#0f172a}
+    .wizard-price-box{padding:13px;border-radius:18px;background:#f8fbff;border:1px solid var(--line);margin-bottom:12px}
+    .wizard-price-box label{font-size:.9rem}
+    .wizard-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    .wizard-actions.three{grid-template-columns:1fr 1fr 1fr}
+    .wizard-progress-mini{display:flex;align-items:center;gap:9px;margin:10px 0 0;color:#35527b;font-size:.82rem;font-weight:900}
+    .wizard-dots{flex:1;height:10px;border-radius:999px;background:#e7f1ff;border:1px solid #cfe3ff;overflow:hidden}
+    .wizard-dots span{display:block;height:100%;width:0%;background:linear-gradient(135deg,var(--primary),#58a8ff);border-radius:999px;transition:width .16s ease}
+    @media(max-width:640px){
+      .wizard-actions,.wizard-actions.three{grid-template-columns:1fr}
+      .wizard-card{padding:13px;border-radius:22px}
+    }
     @media(max-width:980px){
       .hero{grid-template-columns:1fr}.top-pills{justify-content:flex-start}.layout{grid-template-columns:1fr}.preview-box{grid-template-columns:120px 1fr}.preview-img{width:120px;height:120px}
     }
@@ -227,7 +249,7 @@
           ¿Quieres ponerle el mismo precio a todas o prefieres ir seleccionando una por una?
           <div class="decision-actions">
             <button class="btn green" id="useSamePriceBtn" type="button">🏷️ Mismo precio para todas</button>
-            <button class="btn ghost" id="useIndividualPriceBtn" type="button">👆 Precio individual</button>
+            <button class="btn ghost" id="useIndividualPriceBtn" type="button">🚀 Precio individual paso a paso</button>
           </div>
         </div>
 
@@ -243,7 +265,7 @@
             </label>
             <label class="mode-option">
               <input type="radio" name="priceMode" value="individual" />
-              <div><b>Precio individual por foto</b><br><span>Seleccionas una foto y le pones su propio precio.</span></div>
+              <div><b>Precio individual por foto</b><br><span>Abre el asistente: foto 1, escribes precio, guardar y continuar con la siguiente.</span></div>
             </label>
           </div>
         </div>
@@ -257,6 +279,10 @@
         <div class="grid2">
           <button class="btn green" type="button" id="applyAllBtn">🏷️ Aplicar a todas</button>
           <button class="btn primary" type="button" id="applySelectedBtn">✅ Aplicar a seleccionadas</button>
+        </div>
+        <div class="wizard-open-row">
+          <button class="btn amber full" type="button" id="startWizardBtn">🚀 Empezar a poner precios</button>
+          <div class="helper">Flujo rápido: te muestra la 1ra foto, escribes precio, luego <b>Guardar y continuar</b> con la 2da, 3ra, 4ta...</div>
         </div>
 
         <div class="preview-box" id="selectedEditorBox" style="display:none">
@@ -363,7 +389,7 @@
           <div class="gallery-head">
             <div>
               <h2>Fotos cargadas</h2>
-              <p>Marca las fotos que quieras editar en grupo o toca una miniatura para ponerle precio individual.</p>
+              <p>Marca fotos si quieres aplicar precio en grupo, o usa el botón “Empezar a poner precios” para ir foto por foto.</p>
             </div>
             <div class="gallery-actions">
               <button class="btn ghost small" id="selectAllBtn" type="button">✅ Todas</button>
@@ -399,6 +425,36 @@
     </main>
   </div>
 
+  <div class="wizard-modal" id="wizardModal">
+    <div class="wizard-card">
+      <div class="wizard-head">
+        <div>
+          <h2 id="wizardTitle">Poner precio individual</h2>
+          <p id="wizardMeta">Foto 1 de 1. Escribe el precio y continúa.</p>
+        </div>
+        <button class="btn red small" type="button" id="wizardCloseBtn">✕ Cerrar</button>
+      </div>
+      <div class="wizard-preview" id="wizardPreview"></div>
+      <div class="wizard-price-box">
+        <label for="wizardPriceInput" id="wizardPriceLabel">Precio de esta foto</label>
+        <input id="wizardPriceInput" placeholder="Ej: L. 200" inputmode="text" />
+        <div class="wizard-progress-mini">
+          <span id="wizardProgressText">0%</span>
+          <div class="wizard-dots"><span id="wizardProgressFill"></span></div>
+        </div>
+      </div>
+      <div class="wizard-actions three">
+        <button class="btn ghost" type="button" id="wizardBackBtn">⬅️ Anterior</button>
+        <button class="btn primary" type="button" id="wizardNextBtn">💾 Guardar y continuar</button>
+        <button class="btn green" type="button" id="wizardFinishBtn">✅ Finalizar</button>
+      </div>
+      <div class="wizard-actions">
+        <button class="btn amber" type="button" id="wizardSkipBtn">⏭️ Saltar sin cambiar</button>
+        <button class="btn ghost" type="button" id="wizardDownloadAreaBtn">⬇️ Ir a descargar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal" id="modal">
     <div class="modal-card">
       <div class="modal-head">
@@ -425,7 +481,8 @@
       items: [],
       activeId: null,
       mode: 'same',
-      lastGenerated: null
+      lastGenerated: null,
+      wizardIndex: 0
     };
 
     const els = {
@@ -485,7 +542,22 @@
       modalDownloadBtn: $('modalDownloadBtn'),
       modalSelectBtn: $('modalSelectBtn'),
       modalBackBtn: $('modalBackBtn'),
-      toast: $('toast')
+      toast: $('toast'),
+      startWizardBtn: $('startWizardBtn'),
+      wizardModal: $('wizardModal'),
+      wizardTitle: $('wizardTitle'),
+      wizardMeta: $('wizardMeta'),
+      wizardPreview: $('wizardPreview'),
+      wizardPriceInput: $('wizardPriceInput'),
+      wizardPriceLabel: $('wizardPriceLabel'),
+      wizardProgressText: $('wizardProgressText'),
+      wizardProgressFill: $('wizardProgressFill'),
+      wizardCloseBtn: $('wizardCloseBtn'),
+      wizardBackBtn: $('wizardBackBtn'),
+      wizardNextBtn: $('wizardNextBtn'),
+      wizardFinishBtn: $('wizardFinishBtn'),
+      wizardSkipBtn: $('wizardSkipBtn'),
+      wizardDownloadAreaBtn: $('wizardDownloadAreaBtn')
     };
 
     function uid(){
@@ -505,6 +577,12 @@
       return 'jpg';
     }
     function sleep(ms){return new Promise(r => setTimeout(r, ms));}
+    function ordinalEs(n){
+      if(n === 1) return '1ra';
+      if(n === 2) return '2da';
+      if(n === 3) return '3ra';
+      return n + 'ta';
+    }
     function toast(msg){
       els.toast.textContent = msg;
       els.toast.classList.add('show');
@@ -574,7 +652,7 @@
       [els.selectedCount, els.selectedCountTop].forEach(el => el.textContent = selected);
       [els.pricedCount, els.pricedCountTop].forEach(el => el.textContent = priced);
       const disabled = total === 0;
-      [els.applyAllBtn, els.applySelectedBtn, els.selectAllBtn, els.unselectAllBtn, els.clearBtn, els.downloadZipBtn, els.downloadOneByOneBtn, els.downloadSelectedOnlyBtn, els.testPreviewBtn].forEach(btn => btn.disabled = disabled);
+      [els.applyAllBtn, els.applySelectedBtn, els.selectAllBtn, els.unselectAllBtn, els.clearBtn, els.downloadZipBtn, els.downloadOneByOneBtn, els.downloadSelectedOnlyBtn, els.testPreviewBtn, els.startWizardBtn].forEach(btn => btn.disabled = disabled);
       els.applySelectedBtn.disabled = selected === 0;
       els.downloadSelectedOnlyBtn.disabled = selected === 0;
     }
@@ -664,7 +742,79 @@
       els.decisionBox.classList.remove('show');
       setProgress(false);
       closeModal();
+      closeWizard();
       renderAll();
+    }
+
+
+    function startWizard(){
+      if(!state.items.length){toast('Primero sube las fotos.'); return;}
+      setMode('individual');
+      state.wizardIndex = 0;
+      openWizardAt(0);
+    }
+    function openWizardAt(index){
+      if(!state.items.length){toast('No hay fotos.'); return;}
+      state.wizardIndex = Math.max(0, Math.min(state.items.length - 1, index));
+      const item = state.items[state.wizardIndex];
+      state.activeId = item.id;
+      els.wizardModal.classList.add('show');
+      renderWizard();
+      renderAll();
+      setTimeout(() => { els.wizardPriceInput.focus(); els.wizardPriceInput.select(); }, 80);
+    }
+    function renderWizard(){
+      const total = state.items.length;
+      const item = state.items[state.wizardIndex];
+      if(!item){closeWizard(); return;}
+      const current = state.wizardIndex + 1;
+      const next = current + 1;
+      const percent = total ? Math.round(((current - 1) / total) * 100) : 0;
+      els.wizardTitle.textContent = `Precio individual · ${ordinalEs(current)} foto`;
+      els.wizardMeta.textContent = `Foto ${current} de ${total}: ${item.name}`;
+      els.wizardPriceLabel.textContent = `¿Qué precio quieres ponerle a la ${ordinalEs(current)} foto?`;
+      els.wizardPreview.innerHTML = `<img src="${item.url}" alt="${escapeHtml(item.name)}" />`;
+      els.wizardPriceInput.value = item.price || '';
+      els.wizardProgressText.textContent = percent + '%';
+      els.wizardProgressFill.style.width = percent + '%';
+      els.wizardBackBtn.disabled = state.wizardIndex === 0;
+      els.wizardNextBtn.textContent = state.wizardIndex >= total - 1 ? '💾 Guardar y finalizar' : `💾 Guardar y continuar con ${ordinalEs(next)} foto`;
+      els.wizardFinishBtn.disabled = false;
+    }
+    function saveWizardPrice(){
+      const item = state.items[state.wizardIndex];
+      if(!item) return;
+      item.price = els.wizardPriceInput.value.trim();
+    }
+    function wizardNext(){
+      if(!state.items.length) return;
+      saveWizardPrice();
+      if(state.wizardIndex >= state.items.length - 1){
+        finishWizard();
+        return;
+      }
+      openWizardAt(state.wizardIndex + 1);
+      toast('Precio guardado. Vamos con la siguiente foto.');
+    }
+    function wizardSkip(){
+      if(!state.items.length) return;
+      if(state.wizardIndex >= state.items.length - 1){
+        finishWizard();
+        return;
+      }
+      openWizardAt(state.wizardIndex + 1);
+    }
+    function finishWizard(){
+      saveWizardPrice();
+      const priced = state.items.filter(x => (x.price || '').trim()).length;
+      closeWizard();
+      renderAll();
+      setProgress(true, 'Precios listos', 100, `Terminaste el asistente. ${priced} de ${state.items.length} fotos tienen precio. Ahora elige ZIP o descarga 1 por 1 automática.`);
+      document.querySelector('.download-panel')?.scrollIntoView({behavior:'smooth', block:'center'});
+      toast('Listo. Ahora puedes descargar ZIP o 1 por 1.');
+    }
+    function closeWizard(){
+      if(els.wizardModal) els.wizardModal.classList.remove('show');
     }
 
     function loadImageFromItem(item){
@@ -858,7 +1008,8 @@
     });
     document.querySelectorAll('input[name="priceMode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
     els.useSamePriceBtn.addEventListener('click', () => setMode('same'));
-    els.useIndividualPriceBtn.addEventListener('click', () => setMode('individual'));
+    els.useIndividualPriceBtn.addEventListener('click', () => startWizard());
+    els.startWizardBtn.addEventListener('click', () => startWizard());
     els.applyAllBtn.addEventListener('click', () => {
       applyPriceToItems(state.items, els.globalPrice.value.trim());
       renderAll(); toast('Precio aplicado a todas las fotos.');
@@ -960,6 +1111,28 @@
       if(e.key === 'Enter'){
         e.preventDefault();
         if(state.mode === 'same') els.applyAllBtn.click(); else els.applySelectedBtn.click();
+      }
+    });
+
+    els.wizardCloseBtn.addEventListener('click', closeWizard);
+    els.wizardModal.addEventListener('click', e => { if(e.target === els.wizardModal) closeWizard(); });
+    els.wizardBackBtn.addEventListener('click', () => {
+      saveWizardPrice();
+      openWizardAt(state.wizardIndex - 1);
+    });
+    els.wizardNextBtn.addEventListener('click', wizardNext);
+    els.wizardFinishBtn.addEventListener('click', finishWizard);
+    els.wizardSkipBtn.addEventListener('click', wizardSkip);
+    els.wizardDownloadAreaBtn.addEventListener('click', () => {
+      saveWizardPrice();
+      closeWizard();
+      renderAll();
+      document.querySelector('.download-panel')?.scrollIntoView({behavior:'smooth', block:'center'});
+    });
+    els.wizardPriceInput.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        wizardNext();
       }
     });
 
