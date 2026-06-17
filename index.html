@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor de fotos por lote · Precios</title>
+  <style>
+    :root{
+      --bg:#f4f8ff;
+      --panel:#ffffff;
+      --panel-soft:#eef5ff;
+      --text:#14213d;
+      --muted:#64748b;
+      --line:#dbe7f7;
+      --primary:#1479ff;
+      --primary-dark:#075fd1;
+      --green:#13a86b;
+      --red:#e63946;
+      --amber:#f59e0b;
+      --shadow:0 18px 45px rgba(20, 33, 61, .10);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top left, rgba(20,121,255,.13), transparent 28%),
+        linear-gradient(135deg, #f8fbff 0%, #edf5ff 50%, #f7fbff 100%);
+      color:var(--text);
+      font-family:Poppins, Inter, Segoe UI, Roboto, Arial, sans-serif;
+    }
+    button,input,select,textarea{font:inherit}
+    button{border:0;cursor:pointer}
+    .wrap{width:min(1240px, 100%);margin:0 auto;padding:22px clamp(12px,3vw,34px) 38px}
+    .hero{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
+    .brand-badge{
+      width:56px;height:56px;border-radius:18px;display:grid;place-items:center;
+      color:white;font-weight:950;letter-spacing:.5px;
+      background:linear-gradient(135deg,var(--primary),#6cb6ff);
+      box-shadow:0 12px 28px rgba(20,121,255,.28);
+      flex:0 0 auto;
+    }
+    h1{font-size:clamp(1.35rem,3vw,2rem);margin:0 0 5px;line-height:1.08}
+    .brand p{margin:0;color:var(--muted);line-height:1.35;font-size:.94rem}
+    .top-pills{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;white-space:nowrap;
+      padding:10px 13px;border-radius:999px;background:white;border:1px solid var(--line);
+      color:#35527b;font-size:.82rem;font-weight:900;box-shadow:0 10px 22px rgba(20,33,61,.06);
+    }
+    .layout{display:grid;grid-template-columns:minmax(320px,.85fr) minmax(0,1.15fr);gap:18px;align-items:start}
+    .card{
+      background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:18px;overflow:hidden;
+    }
+    .card h2{font-size:1.07rem;margin:0 0 8px}
+    .card p{margin:0 0 14px;color:var(--muted);font-size:.9rem;line-height:1.45}
+    label{display:block;font-size:.82rem;font-weight:950;color:#334155;margin:0 0 7px}
+    input,select,textarea{
+      width:100%;border:1px solid var(--line);border-radius:15px;background:#fbfdff;color:var(--text);
+      outline:0;padding:13px 14px;transition:.15s ease;
+    }
+    input:focus,select:focus,textarea:focus{border-color:#94c5ff;box-shadow:0 0 0 4px rgba(20,121,255,.11);background:white}
+    input[type="checkbox"]{width:auto;accent-color:var(--primary)}
+    input[type="range"]{accent-color:var(--primary);padding:0;border:0;background:transparent}
+    .field{margin-bottom:13px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      min-height:44px;padding:11px 14px;border-radius:15px;text-decoration:none;user-select:none;
+      font-weight:950;transition:.16s ease;text-align:center;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:linear-gradient(135deg,var(--primary),#58a8ff);color:white;box-shadow:0 13px 25px rgba(20,121,255,.22)}
+    .btn.green{background:linear-gradient(135deg,var(--green),#35d499);color:white;box-shadow:0 13px 25px rgba(19,168,107,.19)}
+    .btn.ghost{background:#f1f7ff;color:var(--primary-dark);border:1px solid #cfe3ff}
+    .btn.amber{background:#fff7e7;color:#a66300;border:1px solid #ffe3a7}
+    .btn.red{background:#fff0f2;color:var(--red);border:1px solid #ffd2d7}
+    .btn.small{min-height:34px;padding:7px 10px;border-radius:12px;font-size:.76rem}
+    .btn.full{width:100%}
+    .btn:disabled{opacity:.46;cursor:not-allowed;transform:none!important}
+    .drop{
+      border:2px dashed #bad7ff;border-radius:20px;background:#f8fbff;padding:18px;text-align:center;
+      color:#46607f;margin-bottom:12px;transition:.16s ease;
+    }
+    .drop.drag{border-color:#58a8ff;background:#eef6ff;transform:scale(1.01)}
+    .drop strong{display:block;margin-bottom:5px;color:#275489}
+    .helper{color:var(--muted);font-size:.78rem;line-height:1.35;margin-top:7px}
+    .file-input{background:white;margin-top:8px}
+    .decision{
+      display:none;margin-top:12px;padding:14px;border-radius:18px;background:#fffdf5;border:1px solid #fde7aa;color:#7a4c00;
+    }
+    .decision.show{display:block;animation:fade .18s ease}
+    .decision strong{color:#593800}
+    .decision-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+    @keyframes fade{from{opacity:.35;transform:translateY(5px)}to{opacity:1;transform:none}}
+    .mode-box{display:grid;gap:9px;margin-top:8px}
+    .mode-option{
+      display:flex;gap:10px;align-items:flex-start;padding:11px;border-radius:16px;background:#f8fbff;border:1px solid var(--line);
+      color:#334155;font-size:.86rem;line-height:1.35;font-weight:800;
+    }
+    .mode-option span{font-weight:600;color:var(--muted)}
+    .range-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .range-val{min-width:58px;text-align:center;padding:8px 10px;border-radius:12px;background:#f1f7ff;border:1px solid #cfe3ff;font-weight:950;color:var(--primary-dark);font-size:.82rem}
+    .color-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .color-field{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);background:#fbfdff;border-radius:15px}
+    .color-field input{width:54px;height:42px;padding:3px;border-radius:12px;background:white;cursor:pointer}
+    .color-field span{font-size:.82rem;font-weight:950;color:#334155;line-height:1.25}
+    .inline-check{display:flex;gap:9px;align-items:flex-start;color:#4b647f;font-weight:800;font-size:.86rem;line-height:1.35;margin:0}
+    .summary{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+    .summary .pill{box-shadow:none;background:#f1f7ff;border-color:#cfe3ff;color:#275489}
+    .progress-panel{display:none;margin-top:12px;padding:13px;border-radius:17px;background:#f8fbff;border:1px solid #dbeafe;color:#334155}
+    .progress-panel.show{display:block}
+    .progress-head{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.84rem;font-weight:950;margin-bottom:8px}
+    .progress-head span{color:var(--primary-dark)}
+    .progress-track{height:14px;border-radius:999px;background:#e7f1ff;overflow:hidden;border:1px solid #cfe3ff}
+    .progress-fill{width:0%;height:100%;border-radius:999px;background:linear-gradient(135deg,var(--primary),#58a8ff);transition:width .12s ease}
+    .progress-text{margin-top:8px;color:var(--muted);font-size:.78rem;line-height:1.35;word-break:break-word}
+    .gallery-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .gallery-head h2{margin:0 0 4px}
+    .gallery-head p{margin:0;color:var(--muted);font-size:.88rem;line-height:1.35}
+    .gallery-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;align-items:start}
+    .item{border:1px solid var(--line);background:#fbfdff;border-radius:18px;overflow:hidden;box-shadow:0 10px 20px rgba(20,33,61,.05);transition:.15s ease;position:relative}
+    .item.selected{outline:4px solid rgba(20,121,255,.22);border-color:#7bb8ff;transform:translateY(-1px)}
+    .thumb{aspect-ratio:1/1;background:#eef5ff;overflow:hidden;position:relative;cursor:pointer}
+    .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block;background:#0f172a}
+    .badge-stack{position:absolute;left:8px;top:8px;display:flex;flex-direction:column;gap:6px;align-items:flex-start;z-index:2}
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:999px;background:rgba(15,23,42,.82);color:white;font-size:.68rem;font-weight:950;line-height:1;max-width:125px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .price-preview{
+      position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:2;
+      max-width:88%;padding:6px 10px;border-radius:999px;background:rgba(55,193,136,.92);color:#000;font-weight:1000;
+      font-size:.9rem;text-shadow:0 1px 2px rgba(255,255,255,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+      pointer-events:none;
+    }
+    .price-preview.no-bg{background:transparent!important;color:#000;text-shadow:0 2px 4px rgba(255,255,255,.95),0 -1px 2px rgba(255,255,255,.8),1px 0 2px rgba(255,255,255,.8)}
+    .check-corner{position:absolute;right:8px;top:8px;z-index:3;width:26px!important;height:26px;accent-color:var(--primary)}
+    .item-body{padding:10px}
+    .name{font-size:.76rem;font-weight:950;line-height:1.18;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:1.8em;margin-bottom:7px}
+    .meta{font-size:.68rem;color:var(--muted);font-weight:750;margin-bottom:8px}
+    .quick-price{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+    .quick-price input{padding:9px 10px;border-radius:12px;font-size:.78rem}
+    .item-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+    .empty{display:grid;place-items:center;text-align:center;padding:32px;border:1px dashed #bad7ff;border-radius:20px;background:#f8fbff;color:var(--muted);min-height:220px}
+    .preview-box{display:grid;grid-template-columns:150px 1fr;gap:12px;align-items:start;padding:12px;border-radius:18px;background:#f8fbff;border:1px solid var(--line);margin-top:10px}
+    .preview-img{width:150px;height:150px;border-radius:16px;background:#eef5ff;overflow:hidden;display:grid;place-items:center}
+    .preview-img img,.preview-img video{width:100%;height:100%;object-fit:cover;background:#0f172a}
+    .preview-info strong{display:block;margin-bottom:4px;word-break:break-word}
+    .preview-info span{display:block;color:var(--muted);font-size:.8rem;line-height:1.35;margin-bottom:9px}
+    .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;pointer-events:none;max-width:min(92vw,540px);padding:13px 16px;border-radius:16px;background:#14213d;color:white;box-shadow:0 18px 38px rgba(20,33,61,.28);z-index:100;font-weight:900;transition:.2s ease;text-align:center}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .modal{display:none;position:fixed;inset:0;z-index:90;background:rgba(15,23,42,.48);padding:18px;overflow:auto}
+    .modal.show{display:grid;place-items:center}
+    .modal-card{width:min(96vw,980px);max-height:94vh;overflow:auto;background:white;border-radius:24px;border:1px solid var(--line);box-shadow:0 28px 80px rgba(15,23,42,.34);padding:16px}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+    .modal-head h2{font-size:1.05rem;margin:0 0 4px}
+    .modal-head p{margin:0;color:var(--muted);font-size:.82rem}
+    .modal-preview{background:#f1f7ff;border:1px solid #dbeafe;border-radius:18px;display:grid;place-items:center;min-height:260px;overflow:hidden}
+    .modal-preview img,.modal-preview video{display:block;max-width:100%;max-height:62vh;object-fit:contain;background:#0f172a}
+    .modal-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+    .download-panel{position:sticky;bottom:12px;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 32px rgba(20,33,61,.10);padding:12px;margin-top:14px}
+    .download-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .warn{padding:11px 12px;border-radius:15px;background:#fff7e7;border:1px solid #ffe3a7;color:#8a5900;font-size:.82rem;line-height:1.35;margin-top:12px}
+    @media(max-width:980px){
+      .hero{grid-template-columns:1fr}.top-pills{justify-content:flex-start}.layout{grid-template-columns:1fr}.preview-box{grid-template-columns:120px 1fr}.preview-img{width:120px;height:120px}
+    }
+    @media(max-width:640px){
+      .wrap{padding:14px 12px 30px}.card{padding:14px;border-radius:20px}.grid2,.grid3,.color-grid,.decision-actions,.download-actions,.modal-actions{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px}.item-body{padding:8px}.item-actions,.quick-price{grid-template-columns:1fr}.btn{width:100%}.preview-box{grid-template-columns:1fr}.preview-img{width:100%;height:auto;aspect-ratio:1/1}.gallery-head{display:block}.gallery-actions{justify-content:flex-start;margin-top:10px}.brand-badge{width:48px;height:48px;border-radius:16px}.top-pills .pill{width:100%;justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <div class="brand">
+        <div class="brand-badge">LPS</div>
+        <div>
+          <h1>Editor de fotos por lote</h1>
+          <p>Sube muchas fotos, pon el mismo precio a todas o precio individual, y descarga en ZIP o una por una con barra de progreso.</p>
+        </div>
+      </div>
+      <div class="top-pills">
+        <span class="pill">🖼️ Fotos: <b id="photoCountTop">0</b></span>
+        <span class="pill">✅ Seleccionadas: <b id="selectedCountTop">0</b></span>
+        <span class="pill">🏷️ Con precio: <b id="pricedCountTop">0</b></span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card">
+        <h2>1) Cargar fotos</h2>
+        <p>Selecciona 10, 20 o las que quieras. También puedes arrastrarlas o pegarlas desde el portapapeles.</p>
+        <div class="drop" id="dropZone">
+          <strong>⬇️ Arrastra tus fotos aquí</strong>
+          <span>o usa el botón de galería para elegir muchos archivos de una vez.</span>
+        </div>
+        <div class="grid2">
+          <div>
+            <label for="fileInput">Galería / elegir muchas fotos</label>
+            <input class="file-input" id="fileInput" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.heic,.heif" multiple />
+          </div>
+          <div>
+            <label for="cameraInput">Cámara rápida</label>
+            <input class="file-input" id="cameraInput" type="file" accept="image/*,.jpg,.jpeg,.png,.webp" capture="environment" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="pasteBox">Pegar imagen</label>
+          <div id="pasteBox" contenteditable="true" tabindex="0" style="min-height:58px;border:2px dashed #bad7ff;border-radius:18px;background:white;color:#46607f;display:grid;place-items:center;text-align:center;padding:12px;outline:0;font-size:.88rem;line-height:1.35">
+            📋 Haz clic aquí y pega con Ctrl+V. En móvil: tocar aquí, mantener presionado y Pegar.
+          </div>
+          <div class="helper">Si pegas una captura o imagen copiada, se agregará a la lista.</div>
+        </div>
+
+        <div class="decision" id="decisionBox">
+          <strong id="decisionTitle">Cargaste fotos.</strong><br>
+          ¿Quieres ponerle el mismo precio a todas o prefieres ir seleccionando una por una?
+          <div class="decision-actions">
+            <button class="btn green" id="useSamePriceBtn" type="button">🏷️ Mismo precio para todas</button>
+            <button class="btn ghost" id="useIndividualPriceBtn" type="button">👆 Precio individual</button>
+          </div>
+        </div>
+
+        <h2 style="margin-top:18px">2) Precio y forma</h2>
+        <p>El precio se dibuja directamente sobre cada foto al momento de descargar.</p>
+
+        <div class="field">
+          <label>Modo de precio</label>
+          <div class="mode-box">
+            <label class="mode-option">
+              <input type="radio" name="priceMode" value="same" checked />
+              <div><b>Mismo precio para todas</b><br><span>Escribes una sola vez y se aplica a todas las fotos.</span></div>
+            </label>
+            <label class="mode-option">
+              <input type="radio" name="priceMode" value="individual" />
+              <div><b>Precio individual por foto</b><br><span>Seleccionas una foto y le pones su propio precio.</span></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="globalPrice">Precio para aplicar</label>
+          <input id="globalPrice" value="L. 200" placeholder="Ej: L. 200" />
+          <div class="helper">Puedes escribir: <b>L. 200</b>, <b>2 x L. 350</b>, <b>Oferta L. 99</b>, etc.</div>
+        </div>
+
+        <div class="grid2">
+          <button class="btn green" type="button" id="applyAllBtn">🏷️ Aplicar a todas</button>
+          <button class="btn primary" type="button" id="applySelectedBtn">✅ Aplicar a seleccionadas</button>
+        </div>
+
+        <div class="preview-box" id="selectedEditorBox" style="display:none">
+          <div class="preview-img" id="selectedPreview"></div>
+          <div class="preview-info">
+            <strong id="selectedName">Foto seleccionada</strong>
+            <span id="selectedMeta">Edita el precio solo para esta foto.</span>
+            <div class="field" style="margin-bottom:8px">
+              <label for="selectedPriceInput">Precio de esta foto</label>
+              <input id="selectedPriceInput" placeholder="Ej: L. 250" />
+            </div>
+            <div class="grid2">
+              <button class="btn primary" type="button" id="saveSelectedPriceBtn">💾 Guardar precio</button>
+              <button class="btn ghost" type="button" id="downloadSelectedBtn">⬇️ Descargar esta</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 style="margin-top:18px">3) Diseño del precio</h2>
+        <div class="grid2">
+          <div class="field">
+            <label for="pricePosition">Posición</label>
+            <select id="pricePosition">
+              <option value="top-left">Superior izquierda</option>
+              <option value="top-center">Superior en medio</option>
+              <option value="top-right">Superior derecha</option>
+              <option value="middle-left">Medio izquierda</option>
+              <option value="middle-center">Centro</option>
+              <option value="middle-right">Medio derecha</option>
+              <option value="bottom-left">Inferior izquierda</option>
+              <option value="bottom-center" selected>Inferior en medio</option>
+              <option value="bottom-right">Inferior derecha</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="priceScale">Tamaño</label>
+            <select id="priceScale">
+              <option value="0.8">Pequeño</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.18">Mediano grande</option>
+              <option value="1.38">Grande</option>
+              <option value="1.65">Extra grande</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="opacityRange">Transparencia</label>
+          <div class="range-row">
+            <input id="opacityRange" type="range" min="0.25" max="1" step="0.05" value="0.95" />
+            <span class="range-val" id="opacityText">95%</span>
+          </div>
+        </div>
+
+        <div class="color-grid">
+          <label class="color-field" for="bgColor">
+            <input id="bgColor" type="color" value="#37c188" />
+            <span>Fondo del precio</span>
+          </label>
+          <label class="color-field" for="textColor">
+            <input id="textColor" type="color" value="#000000" />
+            <span>Color del texto</span>
+          </label>
+        </div>
+
+        <div class="field" style="margin-top:13px">
+          <label class="inline-check">
+            <input id="noBgCheck" type="checkbox" checked />
+            <span><b>Sin fondo / sin cuadro</b> por defecto. Desmarca si quieres etiqueta con fondo de color.</span>
+          </label>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="formatSelect">Formato de salida</label>
+            <select id="formatSelect">
+              <option value="image/jpeg" selected>JPG recomendado</option>
+              <option value="image/png">PNG</option>
+              <option value="image/webp">WEBP</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="qualityRange">Calidad JPG/WEBP</label>
+            <div class="range-row">
+              <input id="qualityRange" type="range" min="0.7" max="1" step="0.01" value="0.95" />
+              <span class="range-val" id="qualityText">95%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary">
+          <span class="pill">Archivos: <b id="photoCount">0</b></span>
+          <span class="pill">Seleccionados: <b id="selectedCount">0</b></span>
+          <span class="pill">Con precio: <b id="pricedCount">0</b></span>
+        </div>
+
+        <div class="warn">
+          Nota: si subes HEIC/HEIF y tu navegador no lo puede abrir, esa foto no se podrá convertir. Para Marketplace normalmente JPG es la opción más compatible.
+        </div>
+      </section>
+
+      <section>
+        <div class="card">
+          <div class="gallery-head">
+            <div>
+              <h2>Fotos cargadas</h2>
+              <p>Marca las fotos que quieras editar en grupo o toca una miniatura para ponerle precio individual.</p>
+            </div>
+            <div class="gallery-actions">
+              <button class="btn ghost small" id="selectAllBtn" type="button">✅ Todas</button>
+              <button class="btn ghost small" id="unselectAllBtn" type="button">◻️ Ninguna</button>
+              <button class="btn red small" id="clearBtn" type="button">🧹 Limpiar</button>
+            </div>
+          </div>
+          <div class="gallery" id="gallery"></div>
+          <div class="empty" id="emptyBox">
+            <div>
+              <strong>No hay fotos todavía.</strong><br>
+              Sube tus fotos desde el panel izquierdo para empezar.
+            </div>
+          </div>
+        </div>
+
+        <div class="download-panel">
+          <div class="download-actions">
+            <button class="btn primary" type="button" id="downloadZipBtn">🗜️ Descargar ZIP con todas</button>
+            <button class="btn green" type="button" id="downloadOneByOneBtn">⬇️ Descargar 1 por 1 automático</button>
+          </div>
+          <div class="grid2" style="margin-top:10px">
+            <button class="btn ghost" type="button" id="downloadSelectedOnlyBtn">✅ Descargar solo seleccionadas</button>
+            <button class="btn amber" type="button" id="testPreviewBtn">👁️ Vista previa seleccionada</button>
+          </div>
+          <div class="progress-panel" id="progressPanel">
+            <div class="progress-head"><strong id="progressTitle">Preparando</strong><span id="progressPercent">0%</span></div>
+            <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">Esperando...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <h2 id="modalTitle">Vista previa</h2>
+          <p id="modalMeta">Así quedará la imagen al descargar.</p>
+        </div>
+        <button class="btn red small" type="button" id="closeModalBtn">✕ Cerrar</button>
+      </div>
+      <div class="modal-preview" id="modalPreview"></div>
+      <div class="modal-actions">
+        <button class="btn primary" type="button" id="modalDownloadBtn">⬇️ Descargar esta</button>
+        <button class="btn ghost" type="button" id="modalSelectBtn">✅ Seleccionar esta</button>
+        <button class="btn amber" type="button" id="modalBackBtn">↩️ Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const state = {
+      items: [],
+      activeId: null,
+      mode: 'same',
+      lastGenerated: null
+    };
+
+    const els = {
+      fileInput: $('fileInput'),
+      cameraInput: $('cameraInput'),
+      pasteBox: $('pasteBox'),
+      dropZone: $('dropZone'),
+      decisionBox: $('decisionBox'),
+      decisionTitle: $('decisionTitle'),
+      useSamePriceBtn: $('useSamePriceBtn'),
+      useIndividualPriceBtn: $('useIndividualPriceBtn'),
+      globalPrice: $('globalPrice'),
+      applyAllBtn: $('applyAllBtn'),
+      applySelectedBtn: $('applySelectedBtn'),
+      selectedEditorBox: $('selectedEditorBox'),
+      selectedPreview: $('selectedPreview'),
+      selectedName: $('selectedName'),
+      selectedMeta: $('selectedMeta'),
+      selectedPriceInput: $('selectedPriceInput'),
+      saveSelectedPriceBtn: $('saveSelectedPriceBtn'),
+      downloadSelectedBtn: $('downloadSelectedBtn'),
+      pricePosition: $('pricePosition'),
+      priceScale: $('priceScale'),
+      opacityRange: $('opacityRange'),
+      opacityText: $('opacityText'),
+      bgColor: $('bgColor'),
+      textColor: $('textColor'),
+      noBgCheck: $('noBgCheck'),
+      formatSelect: $('formatSelect'),
+      qualityRange: $('qualityRange'),
+      qualityText: $('qualityText'),
+      gallery: $('gallery'),
+      emptyBox: $('emptyBox'),
+      selectAllBtn: $('selectAllBtn'),
+      unselectAllBtn: $('unselectAllBtn'),
+      clearBtn: $('clearBtn'),
+      downloadZipBtn: $('downloadZipBtn'),
+      downloadOneByOneBtn: $('downloadOneByOneBtn'),
+      downloadSelectedOnlyBtn: $('downloadSelectedOnlyBtn'),
+      testPreviewBtn: $('testPreviewBtn'),
+      progressPanel: $('progressPanel'),
+      progressTitle: $('progressTitle'),
+      progressPercent: $('progressPercent'),
+      progressFill: $('progressFill'),
+      progressText: $('progressText'),
+      photoCount: $('photoCount'),
+      selectedCount: $('selectedCount'),
+      pricedCount: $('pricedCount'),
+      photoCountTop: $('photoCountTop'),
+      selectedCountTop: $('selectedCountTop'),
+      pricedCountTop: $('pricedCountTop'),
+      modal: $('modal'),
+      modalPreview: $('modalPreview'),
+      modalTitle: $('modalTitle'),
+      modalMeta: $('modalMeta'),
+      closeModalBtn: $('closeModalBtn'),
+      modalDownloadBtn: $('modalDownloadBtn'),
+      modalSelectBtn: $('modalSelectBtn'),
+      modalBackBtn: $('modalBackBtn'),
+      toast: $('toast')
+    };
+
+    function uid(){
+      return 'img_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+    }
+    function formatSize(bytes){
+      if(bytes < 1024) return bytes + ' B';
+      if(bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(2) + ' MB';
+    }
+    function safeName(name){
+      return (name || 'foto').replace(/\.[^.]+$/, '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').replace(/^_+|_+$/g,'').slice(0,70) || 'foto';
+    }
+    function extensionFromMime(mime){
+      if(mime === 'image/png') return 'png';
+      if(mime === 'image/webp') return 'webp';
+      return 'jpg';
+    }
+    function sleep(ms){return new Promise(r => setTimeout(r, ms));}
+    function toast(msg){
+      els.toast.textContent = msg;
+      els.toast.classList.add('show');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=> els.toast.classList.remove('show'), 2600);
+    }
+    function setProgress(show, title='Preparando', percent=0, text=''){
+      els.progressPanel.classList.toggle('show', !!show);
+      const p = Math.max(0, Math.min(100, Math.round(percent)));
+      els.progressTitle.textContent = title;
+      els.progressPercent.textContent = p + '%';
+      els.progressFill.style.width = p + '%';
+      els.progressText.textContent = text;
+    }
+    function getOptions(){
+      return {
+        position: els.pricePosition.value,
+        scale: parseFloat(els.priceScale.value || '1'),
+        opacity: parseFloat(els.opacityRange.value || '0.95'),
+        bgColor: els.bgColor.value,
+        textColor: els.textColor.value,
+        noBg: els.noBgCheck.checked,
+        mime: els.formatSelect.value,
+        quality: parseFloat(els.qualityRange.value || '0.95')
+      };
+    }
+    function currentItems(){return state.items;}
+    function selectedItems(){return state.items.filter(x => x.selected);}
+    function activeItem(){return state.items.find(x => x.id === state.activeId) || null;}
+    function firstUsefulItem(){return activeItem() || selectedItems()[0] || state.items[0] || null;}
+
+    async function addFiles(fileList){
+      const files = [...fileList].filter(f => f && f.type && f.type.startsWith('image/'));
+      if(!files.length){toast('No encontré fotos válidas.'); return;}
+      const startLen = state.items.length;
+      for(const file of files){
+        const item = {
+          id: uid(), file,
+          name: file.name || ('foto_' + (state.items.length + 1) + '.jpg'),
+          type: file.type || 'image/jpeg',
+          size: file.size || 0,
+          url: URL.createObjectURL(file),
+          price: els.globalPrice.value.trim(),
+          selected: true
+        };
+        state.items.push(item);
+      }
+      if(!state.activeId && state.items[0]) state.activeId = state.items[0].id;
+      renderAll();
+      const added = state.items.length - startLen;
+      els.decisionTitle.textContent = `Cargaste ${added} foto${added === 1 ? '' : 's'}.`;
+      els.decisionBox.classList.add('show');
+      toast(`Se agregaron ${added} foto${added === 1 ? '' : 's'}.`);
+    }
+
+    function renderAll(){
+      renderGallery();
+      renderCounters();
+      renderSelectedPanel();
+      refreshPreviewBadges();
+    }
+    function renderCounters(){
+      const total = state.items.length;
+      const selected = selectedItems().length;
+      const priced = state.items.filter(x => (x.price || '').trim()).length;
+      [els.photoCount, els.photoCountTop].forEach(el => el.textContent = total);
+      [els.selectedCount, els.selectedCountTop].forEach(el => el.textContent = selected);
+      [els.pricedCount, els.pricedCountTop].forEach(el => el.textContent = priced);
+      const disabled = total === 0;
+      [els.applyAllBtn, els.applySelectedBtn, els.selectAllBtn, els.unselectAllBtn, els.clearBtn, els.downloadZipBtn, els.downloadOneByOneBtn, els.downloadSelectedOnlyBtn, els.testPreviewBtn].forEach(btn => btn.disabled = disabled);
+      els.applySelectedBtn.disabled = selected === 0;
+      els.downloadSelectedOnlyBtn.disabled = selected === 0;
+    }
+    function renderGallery(){
+      els.gallery.innerHTML = '';
+      els.emptyBox.style.display = state.items.length ? 'none' : 'grid';
+      state.items.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'item' + (item.selected ? ' selected' : '');
+        card.dataset.id = item.id;
+        card.innerHTML = `
+          <div class="thumb" data-action="open">
+            <input class="check-corner" data-action="check" type="checkbox" ${item.selected ? 'checked' : ''} title="Seleccionar" />
+            <div class="badge-stack">
+              <span class="badge">#${idx + 1}</span>
+              <span class="badge">${formatSize(item.size)}</span>
+            </div>
+            <img src="${item.url}" alt="${escapeHtml(item.name)}" loading="lazy" />
+            <div class="price-preview ${els.noBgCheck.checked ? 'no-bg' : ''}" data-role="badge">${escapeHtml(item.price || 'Sin precio')}</div>
+          </div>
+          <div class="item-body">
+            <div class="name">${escapeHtml(item.name)}</div>
+            <div class="meta">${item.type || 'imagen'} · ${formatSize(item.size)}</div>
+            <div class="quick-price">
+              <input data-action="price" value="${escapeAttr(item.price || '')}" placeholder="L. 200" />
+              <button class="btn primary small" data-action="save" type="button">OK</button>
+            </div>
+            <div class="item-actions">
+              <button class="btn ghost small" data-action="select-one" type="button">👆 Editar</button>
+              <button class="btn green small" data-action="download-one" type="button">⬇️ Bajar</button>
+            </div>
+          </div>
+        `;
+        els.gallery.appendChild(card);
+      });
+    }
+    function refreshPreviewBadges(){
+      const opt = getOptions();
+      document.querySelectorAll('[data-role="badge"]').forEach(badge => {
+        badge.classList.toggle('no-bg', opt.noBg);
+        badge.style.background = opt.noBg ? 'transparent' : opt.bgColor;
+        badge.style.color = opt.textColor;
+        badge.style.opacity = opt.opacity;
+      });
+    }
+    function renderSelectedPanel(){
+      const item = activeItem();
+      if(!item){
+        els.selectedEditorBox.style.display = 'none';
+        return;
+      }
+      els.selectedEditorBox.style.display = 'grid';
+      els.selectedPreview.innerHTML = `<img src="${item.url}" alt="${escapeHtml(item.name)}" />`;
+      els.selectedName.textContent = item.name;
+      els.selectedMeta.textContent = `${item.type || 'imagen'} · ${formatSize(item.size)}`;
+      els.selectedPriceInput.value = item.price || '';
+    }
+    function escapeHtml(str){
+      return String(str).replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+    }
+    function escapeAttr(str){return escapeHtml(str).replace(/'/g,'&#39;');}
+
+    function setMode(mode){
+      state.mode = mode;
+      document.querySelectorAll('input[name="priceMode"]').forEach(r => r.checked = r.value === mode);
+      els.decisionBox.classList.remove('show');
+      if(mode === 'same'){
+        applyPriceToItems(state.items, els.globalPrice.value.trim());
+        toast('Modo precio único activado y aplicado a todas.');
+      }else{
+        toast('Modo individual activado. Toca una foto para editar su precio.');
+      }
+      renderAll();
+    }
+    function applyPriceToItems(items, price){
+      items.forEach(x => x.price = price);
+    }
+    function selectAll(flag){
+      state.items.forEach(x => x.selected = flag);
+      renderAll();
+    }
+    function clearAll(){
+      state.items.forEach(x => URL.revokeObjectURL(x.url));
+      state.items = [];
+      state.activeId = null;
+      state.lastGenerated = null;
+      els.decisionBox.classList.remove('show');
+      setProgress(false);
+      closeModal();
+      renderAll();
+    }
+
+    function loadImageFromItem(item){
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('No pude abrir la imagen: ' + item.name));
+        img.src = item.url;
+      });
+    }
+    function roundRect(ctx, x, y, w, h, r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+    function hexToRgba(hex, alpha){
+      const h = String(hex || '#000000').replace('#','');
+      const bigint = parseInt(h.length === 3 ? h.split('').map(c=>c+c).join('') : h, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    async function generateBlob(item){
+      if(!item || !item.file) throw new Error('Imagen inválida.');
+      const img = await loadImageFromItem(item);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext('2d', { alpha: true });
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const opt = getOptions();
+      const price = (item.price || '').trim();
+      if(price){
+        drawPrice(ctx, canvas.width, canvas.height, price, opt);
+      }
+      const mime = opt.mime || 'image/jpeg';
+      const quality = mime === 'image/png' ? undefined : opt.quality;
+      return await new Promise(resolve => canvas.toBlob(resolve, mime, quality));
+    }
+    function drawPrice(ctx, W, H, text, opt){
+      const minSide = Math.min(W,H);
+      const baseFont = Math.max(28, Math.round(minSide * 0.065 * opt.scale));
+      const padX = Math.round(baseFont * 0.72);
+      const padY = Math.round(baseFont * 0.42);
+      const margin = Math.max(18, Math.round(minSide * 0.035));
+      ctx.save();
+      ctx.globalAlpha = opt.opacity;
+      ctx.font = `900 ${baseFont}px Arial, Helvetica, sans-serif`;
+      ctx.textBaseline = 'middle';
+      ctx.textAlign = 'left';
+      const metrics = ctx.measureText(text);
+      const textW = metrics.width;
+      const boxW = textW + padX * 2;
+      const boxH = baseFont + padY * 2;
+      let x = margin, y = margin;
+      const [vertical, horizontal] = opt.position.split('-');
+      if(horizontal === 'left') x = margin;
+      if(horizontal === 'center') x = (W - boxW) / 2;
+      if(horizontal === 'right') x = W - boxW - margin;
+      if(vertical === 'top') y = margin;
+      if(vertical === 'middle') y = (H - boxH) / 2;
+      if(vertical === 'bottom') y = H - boxH - margin;
+      x = Math.max(8, Math.min(W - boxW - 8, x));
+      y = Math.max(8, Math.min(H - boxH - 8, y));
+      if(!opt.noBg){
+        ctx.fillStyle = hexToRgba(opt.bgColor, 1);
+        roundRect(ctx, x, y, boxW, boxH, Math.round(boxH * .5));
+        ctx.fill();
+      }
+      const tx = x + padX;
+      const ty = y + boxH / 2;
+      if(opt.noBg){
+        ctx.lineJoin = 'round';
+        ctx.miterLimit = 2;
+        ctx.lineWidth = Math.max(5, Math.round(baseFont * .16));
+        ctx.strokeStyle = 'rgba(255,255,255,.92)';
+        ctx.strokeText(text, tx, ty);
+        ctx.lineWidth = Math.max(2, Math.round(baseFont * .06));
+        ctx.strokeStyle = 'rgba(0,0,0,.18)';
+        ctx.strokeText(text, tx, ty);
+      }
+      ctx.fillStyle = opt.textColor;
+      ctx.fillText(text, tx, ty);
+      ctx.restore();
+    }
+    function fileNameFor(item){
+      const ext = extensionFromMime(els.formatSelect.value);
+      return `${safeName(item.name)}_precio.${ext}`;
+    }
+    function downloadBlob(blob, filename){
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(()=> URL.revokeObjectURL(url), 4000);
+    }
+    async function generateItems(items, progressTitle='Preparando imágenes'){
+      if(!items.length) throw new Error('No hay fotos para descargar.');
+      const out = [];
+      for(let i=0; i<items.length; i++){
+        const item = items[i];
+        setProgress(true, progressTitle, (i / items.length) * 100, `Procesando ${i + 1} de ${items.length}: ${item.name}`);
+        const blob = await generateBlob(item);
+        if(!blob) throw new Error('No se pudo generar la imagen: ' + item.name);
+        out.push({ item, blob, filename: fileNameFor(item) });
+        await sleep(25);
+      }
+      setProgress(true, progressTitle, 100, `Listo: ${items.length} imagen${items.length === 1 ? '' : 'es'} procesada${items.length === 1 ? '' : 's'}.`);
+      return out;
+    }
+    async function downloadZip(items){
+      try{
+        if(!window.JSZip){toast('JSZip no cargó. Revisa internet o descarga 1 por 1.'); return;}
+        const generated = await generateItems(items, 'Creando ZIP');
+        const zip = new JSZip();
+        generated.forEach(({blob, filename}, idx) => zip.file(String(idx + 1).padStart(2,'0') + '_' + filename, blob));
+        setProgress(true, 'Comprimiendo ZIP', 92, 'Generando archivo ZIP...');
+        const zipBlob = await zip.generateAsync({type:'blob'}, meta => {
+          setProgress(true, 'Comprimiendo ZIP', 92 + meta.percent * 0.08, `Compresión: ${Math.round(meta.percent)}%`);
+        });
+        downloadBlob(zipBlob, 'fotos_con_precios.zip');
+        setProgress(true, 'ZIP descargado', 100, 'Descarga lista.');
+        toast('ZIP descargado con todas las fotos.');
+      }catch(err){
+        console.error(err);
+        setProgress(true, 'Error', 100, err.message || String(err));
+        toast('Error al crear ZIP.');
+      }
+    }
+    async function downloadOneByOne(items){
+      try{
+        const generated = await generateItems(items, 'Descarga individual');
+        for(let i=0; i<generated.length; i++){
+          const {blob, filename, item} = generated[i];
+          setProgress(true, 'Descargando 1 por 1', (i / generated.length) * 100, `Descargando ${i + 1} de ${generated.length}: ${item.name}`);
+          downloadBlob(blob, filename);
+          await sleep(350);
+        }
+        setProgress(true, 'Descarga completa', 100, `Se enviaron ${generated.length} descarga${generated.length === 1 ? '' : 's'} al navegador.`);
+        toast('Descargas individuales iniciadas.');
+      }catch(err){
+        console.error(err);
+        setProgress(true, 'Error', 100, err.message || String(err));
+        toast('Error al descargar 1 por 1.');
+      }
+    }
+    async function previewItem(item){
+      try{
+        if(!item){toast('Selecciona una foto primero.'); return;}
+        setProgress(true, 'Vista previa', 20, 'Generando vista previa...');
+        const blob = await generateBlob(item);
+        const url = URL.createObjectURL(blob);
+        state.lastGenerated = { item, blob, url, filename: fileNameFor(item) };
+        els.modalPreview.innerHTML = `<img src="${url}" alt="Vista previa" />`;
+        els.modalTitle.textContent = item.name;
+        els.modalMeta.textContent = `Precio: ${item.price || 'Sin precio'} · ${formatSize(blob.size)}`;
+        els.modal.classList.add('show');
+        setProgress(true, 'Vista previa lista', 100, 'Así quedará la imagen al descargar.');
+      }catch(err){
+        console.error(err);
+        toast(err.message || 'No pude generar vista previa.');
+      }
+    }
+    function closeModal(){
+      els.modal.classList.remove('show');
+      if(state.lastGenerated?.url){URL.revokeObjectURL(state.lastGenerated.url)}
+      state.lastGenerated = null;
+      els.modalPreview.innerHTML = '';
+    }
+
+    els.fileInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+    els.cameraInput.addEventListener('change', e => { addFiles(e.target.files); e.target.value = ''; });
+    ['dragenter','dragover'].forEach(ev => els.dropZone.addEventListener(ev, e => { e.preventDefault(); els.dropZone.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(ev => els.dropZone.addEventListener(ev, e => { e.preventDefault(); els.dropZone.classList.remove('drag'); }));
+    els.dropZone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+    els.pasteBox.addEventListener('paste', e => {
+      const files = [];
+      for(const item of e.clipboardData?.items || []){
+        if(item.kind === 'file') files.push(item.getAsFile());
+      }
+      if(files.length){e.preventDefault(); addFiles(files); els.pasteBox.innerHTML = '📋 Imagen pegada. Puedes pegar otra.';}
+    });
+    document.querySelectorAll('input[name="priceMode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
+    els.useSamePriceBtn.addEventListener('click', () => setMode('same'));
+    els.useIndividualPriceBtn.addEventListener('click', () => setMode('individual'));
+    els.applyAllBtn.addEventListener('click', () => {
+      applyPriceToItems(state.items, els.globalPrice.value.trim());
+      renderAll(); toast('Precio aplicado a todas las fotos.');
+    });
+    els.applySelectedBtn.addEventListener('click', () => {
+      const sel = selectedItems();
+      if(!sel.length){toast('Selecciona al menos una foto.'); return;}
+      applyPriceToItems(sel, els.globalPrice.value.trim());
+      renderAll(); toast('Precio aplicado a las seleccionadas.');
+    });
+    els.selectAllBtn.addEventListener('click', () => selectAll(true));
+    els.unselectAllBtn.addEventListener('click', () => selectAll(false));
+    els.clearBtn.addEventListener('click', () => {
+      if(confirm('¿Seguro que quieres limpiar todas las fotos del editor?')) clearAll();
+    });
+    els.gallery.addEventListener('click', async e => {
+      const card = e.target.closest('.item');
+      if(!card) return;
+      const item = state.items.find(x => x.id === card.dataset.id);
+      if(!item) return;
+      const action = e.target.dataset.action || e.target.closest('[data-action]')?.dataset.action;
+      if(action === 'check'){
+        item.selected = e.target.checked;
+        renderAll();
+        return;
+      }
+      if(action === 'save'){
+        const inp = card.querySelector('[data-action="price"]');
+        item.price = inp.value.trim();
+        state.activeId = item.id;
+        renderAll(); toast('Precio guardado para esta foto.');
+        return;
+      }
+      if(action === 'select-one'){
+        state.activeId = item.id;
+        renderAll();
+        document.querySelector('#selectedEditorBox')?.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+      if(action === 'download-one'){
+        state.activeId = item.id;
+        renderAll();
+        const blob = await generateBlob(item);
+        downloadBlob(blob, fileNameFor(item));
+        toast('Foto descargada.');
+        return;
+      }
+      if(action === 'open'){
+        state.activeId = item.id;
+        renderAll();
+        previewItem(item);
+      }
+    });
+    els.gallery.addEventListener('input', e => {
+      if(e.target.dataset.action !== 'price') return;
+      const card = e.target.closest('.item');
+      const item = state.items.find(x => x.id === card?.dataset.id);
+      if(item){
+        item.price = e.target.value;
+        const badge = card.querySelector('[data-role="badge"]');
+        if(badge) badge.textContent = item.price || 'Sin precio';
+        renderCounters();
+      }
+    });
+    els.saveSelectedPriceBtn.addEventListener('click', () => {
+      const item = activeItem();
+      if(!item){toast('Selecciona una foto primero.'); return;}
+      item.price = els.selectedPriceInput.value.trim();
+      renderAll(); toast('Precio guardado para la foto seleccionada.');
+    });
+    els.downloadSelectedBtn.addEventListener('click', async () => {
+      const item = activeItem();
+      if(!item){toast('Selecciona una foto primero.'); return;}
+      try{
+        const blob = await generateBlob(item);
+        downloadBlob(blob, fileNameFor(item));
+        toast('Foto seleccionada descargada.');
+      }catch(err){toast(err.message || 'No pude descargar.');}
+    });
+    els.downloadZipBtn.addEventListener('click', () => downloadZip(currentItems()));
+    els.downloadOneByOneBtn.addEventListener('click', () => downloadOneByOne(currentItems()));
+    els.downloadSelectedOnlyBtn.addEventListener('click', () => downloadZip(selectedItems()));
+    els.testPreviewBtn.addEventListener('click', () => previewItem(firstUsefulItem()));
+    els.closeModalBtn.addEventListener('click', closeModal);
+    els.modalBackBtn.addEventListener('click', closeModal);
+    els.modal.addEventListener('click', e => { if(e.target === els.modal) closeModal(); });
+    els.modalDownloadBtn.addEventListener('click', () => {
+      if(!state.lastGenerated){toast('No hay vista previa generada.'); return;}
+      downloadBlob(state.lastGenerated.blob, state.lastGenerated.filename);
+    });
+    els.modalSelectBtn.addEventListener('click', () => {
+      const item = state.lastGenerated?.item;
+      if(item){ item.selected = true; state.activeId = item.id; renderAll(); toast('Foto seleccionada.'); }
+    });
+    [els.pricePosition, els.priceScale, els.bgColor, els.textColor, els.noBgCheck, els.formatSelect].forEach(el => el.addEventListener('change', () => { refreshPreviewBadges(); renderSelectedPanel(); }));
+    els.opacityRange.addEventListener('input', () => { els.opacityText.textContent = Math.round(parseFloat(els.opacityRange.value)*100) + '%'; refreshPreviewBadges(); });
+    els.qualityRange.addEventListener('input', () => { els.qualityText.textContent = Math.round(parseFloat(els.qualityRange.value)*100) + '%'; });
+    els.globalPrice.addEventListener('keydown', e => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        if(state.mode === 'same') els.applyAllBtn.click(); else els.applySelectedBtn.click();
+      }
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
